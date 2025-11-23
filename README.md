@@ -6,15 +6,25 @@ This project is an interactive data visualization dashboard built with Python, S
 The dataset contains several housing features such as price, bedrooms, bathrooms, condition, living area, lot size, and more. Users can interactively filter the data by price range, city, bedroom count, condition, and living area.
 
 Visualizations Included
+
 	•	Sankey Diagram (Bedrooms → Condition)
+	
 	•	3D Scatter Plot (Living Area vs Lot Size vs Price)
+	
 	•	Correlation Heatmap
+	
 	•	Geo Map
+	
 	•	Treemap
+	
 	•	Interactive Histogram
+	
 	•	Parallel Coordinates
+	
 	•	Network Graph
+	
 	•	Box Plot
+	
 
 Interactivity Features
 	•	Dynamic filtering
