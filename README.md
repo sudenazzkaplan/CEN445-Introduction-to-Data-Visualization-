@@ -26,3 +26,7 @@ Interactivity Features
 
 This dashboard provides a clean, user-friendly interface for exploring complex housing data and identifying meaningful patterns.
 
+Team Member
+1.Sudenaz Kaplan
+2.Berat Atmaca
+3.Şükrü Tarık Sezer
