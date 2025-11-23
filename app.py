@@ -124,39 +124,114 @@ elif page == "Histogram Analysis":
 elif page == "Proportional Symbol Map Analysis":
     st.title("🗺️ Proportional Symbol Map Analysis")
     
-    # Coordinate check
+    city_coords = {
+        'Algona': {'lat': 47.2793, 'lon': -122.2601},
+        'Auburn': {'lat': 47.3073, 'lon': -122.2284},
+        'Beaux Arts Village': {'lat': 47.5865, 'lon': -122.2026},
+        'Bellevue': {'lat': 47.6101, 'lon': -122.2015},
+        'Black Diamond': {'lat': 47.3087, 'lon': -122.0032},
+        'Bothell': {'lat': 47.7601, 'lon': -122.2054},
+        'Burien': {'lat': 47.4699, 'lon': -122.3485},
+        'Carnation': {'lat': 47.6482, 'lon': -121.9107},
+        'Clyde Hill': {'lat': 47.6309, 'lon': -122.2196},
+        'Covington': {'lat': 47.3654, 'lon': -122.1146},
+        'Des Moines': {'lat': 47.4018, 'lon': -122.3243},
+        'Duvall': {'lat': 47.7423, 'lon': -121.9857},
+        'Enumclaw': {'lat': 47.2043, 'lon': -121.9915},
+        'Fall City': {'lat': 47.5673, 'lon': -121.8882},
+        'Federal Way': {'lat': 47.3223, 'lon': -122.3126},
+        'Inglewood-Finn Hill': {'lat': 47.7169, 'lon': -122.2265},
+        'Issaquah': {'lat': 47.5301, 'lon': -122.0326},
+        'Kenmore': {'lat': 47.7562, 'lon': -122.2440},
+        'Kent': {'lat': 47.3809, 'lon': -122.2348},
+        'Kirkland': {'lat': 47.6768, 'lon': -122.2060},
+        'Lake Forest Park': {'lat': 47.7548, 'lon': -122.2787},
+        'Maple Valley': {'lat': 47.3734, 'lon': -122.0465},
+        'Medina': {'lat': 47.6215, 'lon': -122.2251},
+        'Mercer Island': {'lat': 47.5707, 'lon': -122.2221},
+        'Milton': {'lat': 47.2493, 'lon': -122.3151},
+        'Newcastle': {'lat': 47.5395, 'lon': -122.1646},
+        'Normandy Park': {'lat': 47.4348, 'lon': -122.3393},
+        'North Bend': {'lat': 47.4957, 'lon': -121.7868},
+        'Pacific': {'lat': 47.2648, 'lon': -122.2493},
+        'Preston': {'lat': 47.5138, 'lon': -121.9277},
+        'Ravensdale': {'lat': 47.3516, 'lon': -121.9909},
+        'Redmond': {'lat': 47.6740, 'lon': -122.1215},
+        'Renton': {'lat': 47.4829, 'lon': -122.2171},
+        'Sammamish': {'lat': 47.6082, 'lon': -122.0376},
+        'SeaTac': {'lat': 47.4447, 'lon': -122.2971},
+        'Seattle': {'lat': 47.6062, 'lon': -122.3321},
+        'Shoreline': {'lat': 47.7560, 'lon': -122.3457},
+        'Skykomish': {'lat': 47.7082, 'lon': -121.3609},
+        'Snoqualmie': {'lat': 47.5287, 'lon': -121.8254},
+        'Snoqualmie Pass': {'lat': 47.4211, 'lon': -121.4122},
+        'Tukwila': {'lat': 47.4740, 'lon': -122.2610},
+        'Vashon': {'lat': 47.4492, 'lon': -122.4604},
+        'Woodinville': {'lat': 47.7543, 'lon': -122.1635},
+        'Yarrow Point': {'lat': 47.6457, 'lon': -122.2185}
+    }
     if 'lat' not in d.columns or 'lon' not in d.columns:
-        np.random.seed(42)
-        d['lat'] = np.random.uniform(47.4, 47.8, len(d))
-        d['lon'] = np.random.uniform(-122.4, -122.1, len(d))
-    
-    # Map specific filters
+        # Map fonksiyonu ile hızlı atama
+        d['lat'] = d['city'].map(lambda x: city_coords.get(x, {'lat': None})['lat'])
+        d['lon'] = d['city'].map(lambda x: city_coords.get(x, {'lon': None})['lon'])
+        d['lat'] = d['lat'].fillna(47.6062)
+        d['lon'] = d['lon'].fillna(-122.3321)
+        
+        np.random.seed(42) 
+        d['lat'] = d['lat'] + np.random.normal(0, 0.005, len(d))
+        d['lon'] = d['lon'] + np.random.normal(0, 0.005, len(d))
+
     col1, col2 = st.columns(2)
     with col1:
-        city = st.selectbox("City", ['All'] + list(d.city.unique()))
+        city = st.selectbox("City", ['All'] + sorted(list(d.city.unique())))
     with col2:
         bed = st.selectbox("Bedrooms", ['All'] + sorted(d.bedrooms.unique()))
     
-    # Filtering
-    filtered_data = d[((d.city == city) | (city == 'All')) & ((d.bedrooms == bed) | (bed == 'All'))]
-    
-    # Map
+    filtered_data = d.copy()
+    if city != 'All':
+        filtered_data = filtered_data[filtered_data.city == city]
+    if bed != 'All':
+        filtered_data = filtered_data[filtered_data.bedrooms == bed]
+   
+    if city != 'All':
+        view_lat = city_coords.get(city, {'lat': 47.6})['lat']
+        view_lon = city_coords.get(city, {'lon': -122.3})['lon']
+        zoom_level = 11
+    else:
+        view_lat = 47.6
+        view_lon = -122.3
+        zoom_level = 9
+   
     if not filtered_data.empty:
         st.pydeck_chart(pdk.Deck(
-            initial_view_state=pdk.ViewState(latitude=47.6, longitude=-122.3, zoom=9),
-            layers=[pdk.Layer("ScatterplotLayer", filtered_data, get_position=['lon', 'lat'], 
-                             get_radius="price/5000", get_fill_color=[255, 0, 0, 160], 
-                             pickable=True, auto_highlight=True)],
-            tooltip={"html": "<b>Price:</b> ${price}<br><b>City:</b> {city}<br><b>Bedrooms:</b> {bedrooms}", 
-                    "style": {"backgroundColor": "steelblue", "color": "white"}}
+            initial_view_state=pdk.ViewState(
+                latitude=view_lat, 
+                longitude=view_lon, 
+                zoom=zoom_level,
+                pitch=0
+            ),
+            layers=[pdk.Layer(
+                "ScatterplotLayer", 
+                filtered_data, 
+                get_position=['lon', 'lat'], 
+                get_radius="price/5000",  # Fiyata göre boyutlandırma
+                get_fill_color=[255, 0, 0, 160], 
+                pickable=True, 
+                auto_highlight=True,
+                radius_min_pixels=3,
+                radius_max_pixels=100
+            )],
+            tooltip={
+                "html": "<b>Price:</b> ${price}<br><b>City:</b> {city}<br><b>Bedrooms:</b> {bedrooms}<br><b>Sqft:</b> {sqft_living}", 
+                "style": {"backgroundColor": "steelblue", "color": "white"}
+            }
         ))
     else:
         st.warning("No data found for the selected criteria.")
     
-    # Metrics
     cols = st.columns(4)
     metrics = [
-        ("Total", len(filtered_data)), 
+        ("Total Homes", len(filtered_data)), 
         ("Avg. Price", f"${filtered_data.price.mean():,.0f}"), 
         ("Avg. Bedrooms", f"{filtered_data.bedrooms.mean():.1f}"), 
         ("Avg. Sqft", f"{filtered_data.sqft_living.mean():.0f}")
@@ -165,7 +240,7 @@ elif page == "Proportional Symbol Map Analysis":
         col.metric(label, val)
     
     if st.checkbox("Show Filtered Data"):
-        st.dataframe(filtered_data.head())
+        st.dataframe(filtered_data.head(10))
 
 # Sankey Diagram Page
 elif page == "Sankey Diagram":
@@ -449,3 +524,4 @@ elif page == "Network Graph":
     - Estimated Edges: {len(G.edges())}
     - Average Degree: {np.mean([deg for _, deg in G.degree()]):.2f}
     """)
+
